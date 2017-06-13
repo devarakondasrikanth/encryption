@@ -1,12 +1,8 @@
 package com.srikanth.spring.encryption;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.security.crypto.codec.Base64;
-
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 
 
