@@ -10,7 +10,6 @@ public class BouncycastleCryptoTest {
 	@Test
 	public void encryptionTest(){
 		try {
-			System.out.println(bc.encrypt(inputString));
 			Assert.assertNotNull(bc.encrypt(inputString));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -24,8 +23,7 @@ public class BouncycastleCryptoTest {
 		String encryptedStr;
 		try {
 			encryptedStr = bc.encrypt(inputString);
-			Assert.assertNotNull(bc.decrypt(encryptedStr));
-			System.out.println(bc.decrypt(encryptedStr));
+			Assert.assertEquals(inputString, bc.decrypt(encryptedStr));
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
