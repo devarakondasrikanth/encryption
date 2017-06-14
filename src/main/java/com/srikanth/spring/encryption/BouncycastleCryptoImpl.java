@@ -12,19 +12,27 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
+import org.springframework.stereotype.Component;
 
-public class BouncycastleCryptoImpl implements BouncycastleCrypto,TextEncryptor{
+@Component
+public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements BouncycastleCrypto,TextEncryptor{
 	
 	static{
 		Security.addProvider(new  BouncyCastleProvider());
 	}
 	
+	private final Log log = LogFactory.getLog(getClass());
 	
 	@Override
 	public String encrypt(String plainText){
+		log.info("Encrypting plainText using Bouncy Castle");
 		byte[] clean = plainText.getBytes();
         // Generating IV.
         int ivSize = 16;
@@ -55,6 +63,7 @@ public class BouncycastleCryptoImpl implements BouncycastleCrypto,TextEncryptor{
 
 	@Override
 	public String decrypt(String encryptedText){
+		log.info("Decrypting plainText using Bouncy Castle");
 		int ivSize = 16;
         //Base64 Decoding
         byte[] encryptedIvTextBytes = Base64.decode(encryptedText.getBytes());
@@ -79,6 +88,20 @@ public class BouncycastleCryptoImpl implements BouncycastleCrypto,TextEncryptor{
 		}        
 
         return new String(decrypted);
+	}
+	
+	@Override
+	public boolean matches(CharSequence rawPassword, String encodedPassword) {
+		if(decrypt(encodedPassword).equals(rawPassword)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	@Override
+	public String encode(CharSequence rawPassword) {
+		return encrypt((String) rawPassword);
 	}
 
 }
