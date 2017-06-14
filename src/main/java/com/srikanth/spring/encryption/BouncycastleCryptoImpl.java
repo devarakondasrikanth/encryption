@@ -49,8 +49,7 @@ public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements Bou
 	        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
 	        encrypted = cipher.doFinal(clean);
 		} catch (NoSuchAlgorithmException | IOException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("Exception while encrypting data "+e.getMessage());			
 		}
         
         // Combine IV and encrypted part.
@@ -83,8 +82,7 @@ public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements Bou
 	        cipherDecrypt.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
 	        decrypted = cipherDecrypt.doFinal(encryptedBytes);
 		} catch (NoSuchAlgorithmException | IOException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("Exception while decrypting data "+e.getMessage());	
 		}        
 
         return new String(decrypted);
