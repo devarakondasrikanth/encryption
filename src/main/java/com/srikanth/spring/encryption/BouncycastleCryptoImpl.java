@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
 
@@ -45,10 +46,10 @@ public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements Bou
 		try {
 			secretKeySpec = (SecretKeySpec) CryptoUtility.getKey();
 			// Encrypt.
-	        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+	        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding","BC");
 	        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
 	        encrypted = cipher.doFinal(clean);
-		} catch (NoSuchAlgorithmException | IOException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+		} catch (NoSuchAlgorithmException | IOException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchProviderException e) {
 			log.warn("Exception while encrypting data "+e.getMessage());			
 		}
         
@@ -78,10 +79,10 @@ public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements Bou
         byte[] decrypted = null;
 		try {
 			secretKeySpec = (SecretKeySpec) CryptoUtility.getKey();
-			Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS7Padding");
+			Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS7Padding","BC");
 	        cipherDecrypt.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
 	        decrypted = cipherDecrypt.doFinal(encryptedBytes);
-		} catch (NoSuchAlgorithmException | IOException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+		} catch (NoSuchAlgorithmException | IOException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | NoSuchProviderException e) {
 			log.warn("Exception while decrypting data "+e.getMessage());	
 		}        
 

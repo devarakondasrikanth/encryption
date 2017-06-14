@@ -16,7 +16,7 @@ import org.springframework.util.Assert;
 @Component
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class MyTestBean {	
+public class MyBeanTest {	
 	
 	private final Log log = LogFactory.getLog(getClass());
 	
