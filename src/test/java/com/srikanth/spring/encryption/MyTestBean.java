@@ -37,9 +37,9 @@ public class MyTestBean {
 	TextEncryptor textEncrypt;
 	
 	@Test
-	public void encryptTest(){
-		log.info("Encrypted the text value "+bcryptEncoder.encode(orgText));
+	public void encryptTest(){		
 		Assert.notNull(bcryptEncoder.encode(orgText),"Encrypting the text value");
+		log.info("Encrypted the text value "+bcryptEncoder.encode(orgText));
 	}
 	
 	@Test

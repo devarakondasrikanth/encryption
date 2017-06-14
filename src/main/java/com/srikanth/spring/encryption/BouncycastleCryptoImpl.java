@@ -62,7 +62,7 @@ public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements Bou
 
 	@Override
 	public String decrypt(String encryptedText){
-		log.info("Decrypting plainText using Bouncy Castle");
+		log.info("Decrypting encryptedText using Bouncy Castle");
 		int ivSize = 16;
         //Base64 Decoding
         byte[] encryptedIvTextBytes = Base64.decode(encryptedText.getBytes());
