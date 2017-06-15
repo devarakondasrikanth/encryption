@@ -16,6 +16,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.codec.Base64;
@@ -26,7 +27,7 @@ import org.springframework.stereotype.Component;
 public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements BouncycastleCrypto,TextEncryptor{
 	
 	static{
-		Security.addProvider(new  BouncyCastleProvider());
+		Security.addProvider(new  BouncyCastleFipsProvider());
 	}
 	
 	private final Log log = LogFactory.getLog(getClass());
@@ -46,7 +47,7 @@ public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements Bou
 		try {
 			secretKeySpec = (SecretKeySpec) CryptoUtility.getKey();
 			// Encrypt.
-	        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding","BC");
+	        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding","BCFIPS");
 	        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
 	        encrypted = cipher.doFinal(clean);
 		} catch (NoSuchAlgorithmException | IOException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchProviderException e) {
@@ -79,7 +80,7 @@ public class BouncycastleCryptoImpl extends BCryptPasswordEncoder implements Bou
         byte[] decrypted = null;
 		try {
 			secretKeySpec = (SecretKeySpec) CryptoUtility.getKey();
-			Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS7Padding","BC");
+			Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS7Padding","BCFIPS");
 	        cipherDecrypt.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
 	        decrypted = cipherDecrypt.doFinal(encryptedBytes);
 		} catch (NoSuchAlgorithmException | IOException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | NoSuchProviderException e) {
