@@ -1,0 +1,173 @@
+ Parses documents and adds them to indexes within elasticsearch based on document type.
+input {
+  beats {
+       port => 5044
+       }
+
+  file {
+        path => "/data/logstash/input/datafiles/audit-*"
+        type => "db2audit"
+        close_older => 60
+        ignore_older => 86400000
+        start_position => "beginning"
+        add_field => [ "secLevel", "low" ]
+        codec => multiline {
+           # lines that don't start with <space>TABLE should be lumped together a single log entry
+            pattern => "^(?!\sTABLE)"
+         what => "previous"
+        }
+     }
+
+
+  file {
+       path => "/data/logstash/input/datafiles/pcm-metric*"
+       type => "pcmmetrics"
+       ignore_older => 86400000
+       start_position => "beginning"
+       ignore_older => 86400000
+       exclude => [".gz"]
+       tags => ["pcmmetrics"]
+    }
+
+
+}
+
+filter {
+
+  if [type] == "db2audit" {
+
+  # Key Value Filter will create key=value pairs equivalent to <elastic field name>=<value>
+  # https://www.elastic.co/guide/en/logstash/current/plugins-filters-kv.html
+
+    kv {
+      allow_duplicate_values => false
+      field_split=>"|"
+      trimkey=>"\s\r\n"
+    }
+
+    # remove pipes
+     mutate{
+         gsub => [ "message", "(\|)", " "  ]
+     }
+
+     if [path] =~ "sec" {
+        mutate { replace => { "secLevel" => "high" } }
+     }
+
+     date {
+        match => [ "TIMESTAMP", "yyyy-MM-dd-HH.mm.ss.SSSSSS"]
+        target => "@timestamp"
+     }
+  }
+
+  if [type] == "pcmmetrics" {
+     mutate {
+        gsub => ["message", "\u0000", ""]
+     }
+     grok {
+         match => ["message", "%{PCM_METRIC_FORMAT}"]
+         patterns_dir => ["/etc/logstash/patterns"]
+     }
+     date {
+        timezone => "America/Chicago"
+        match => ["documentCreateDate", "yyyy-MM-dd-HH.mm.ss.SSSSSS"]
+     }
+  }
+
+
+   if  "jenkins-job-results" in [tags] {
+     mutate {
+         gsub => [ "message", "\n", ""]
+     }
+     grok {
+         match => ["message", "%{JENKINS_BUILD_RESULTS_FORMAT}"]
+         patterns_dir => ["/etc/logstash/patterns"]
+     }
+     date {
+        timezone => "America/Chicago"
+        match => ["timestamp", "UNIX_MS"]
+     }
+     if "RISACC/" in [buildName]{
+         mutate {replace => {"teamName" => "FSA Account Train"}}
+     }
+     if "RISANN/" in [buildName]{
+         mutate {replace => {"teamName" => "Annuites Applications"}}
+     }
+     if "RISANNDM/" in [buildName]{
+         mutate {replace => {"teamName" => "Annuities Domain"}}
+     }
+     if "RISCGS/" in [buildName]{
+         mutate {replace => {"teamName" => "CGS Team"}}
+     }
+     if "RISCORE/" in [buildName]{
+         mutate {replace => {"teamName" => "Core Components"}}
+     }
+     if "RISDB/" in [buildName]{
+         mutate {replace => {"teamName" => "FSA DB Processes"}}
+     }
+     if "RISFD/" in [buildName]{
+         mutate {replace => {"teamName" => "Funds"}}
+     }
+     if "RISFECOMP/" in [buildName]{
+         mutate {replace => {"teamName" => "FE Components"}}
+     }
+     if "RISFECORE/" in [buildName]{
+         mutate {replace => {"teamName" => "FE Core"}}
+     }
+     if "RISFX/" in [buildName]{
+         mutate {replace => {"teamName" => "FE XSLT"}}
+     }
+     if "RISINT/" in [buildName]{
+         mutate {replace => {"teamName" => "FSA Intermediary"}}
+     }
+     if "RISPLN/" in [buildName]{
+         mutate {replace => {"teamName" => "FSA Plan Sponsor/TPA Train"}}
+     }
+     if "RISPRTCP/" in [buildName]{
+         mutate {replace => {"teamName" => "FSA Participant Train"}}
+     }
+     if "RISSS/" in [buildName]{
+         mutate {replace => {"teamName" => "FSA Shared Services"}}
+     }
+     if "RISTSA/" in [buildName]{
+         mutate {replace => {"teamName" => "Tech Solutions Automation"}}
+     }
+     if "RISWI/" in [buildName]{
+         mutate {replace => {"teamName" => "Web Infrastructure"}}
+     } 
+  }
+}
+ 
+output {
+  stdout { codec => rubydebug }
+  if [secLevel] =="high" {
+      elasticsearch {
+        ssl => "true"
+        document_id => "%{UID}"
+        cacert => "/etc/logstash/certs/rootcag2.pem"
+        hosts => <%= @logstash_output_hosts %>
+        user => <%= @elasticsearch_username %>
+        password => <%= @elasticsearch_password %>
+        index => "db2auditsecure-dist-%{+YYYY.MM}"
+     }
+  } elseif [secLevel] =="low" {
+      elasticsearch {
+        ssl => "true"
+        document_id => "%{UID}"
+        cacert => "/etc/logstash/certs/rootcag2.pem"
+        hosts => <%= @logstash_output_hosts %>
+        user => <%= @elasticsearch_username %>
+        password => <%= @elasticsearch_password %>
+        index => "db2audit-dist-%{+YYYY.MM}"
+      }
+  } else {
+      elasticsearch {
+        ssl => true
+        cacert => "/etc/logstash/certs/rootcag2.pem"
+        hosts => <%= @logstash_output_hosts %>
+        user => <%= @elasticsearch_username %>
+        password => <%= @elasticsearch_password %>
+        index => "metrics-%{+YYYY.MM}"
+     }
+  }
+}
